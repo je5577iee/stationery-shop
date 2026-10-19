@@ -1,0 +1,630 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>文具店開張囉</title>
+<!--
+  文具店開張囉：湊錢、找錢的小遊戲
+  - 單一 HTML 檔，完全離線可用，不引用任何外部資源
+  - 文具、客人、錢幣等所有圖案皆為原創 SVG 向量圖；錢幣只標面額與顏色，並非真實貨幣圖樣
+  - 最佳紀錄只存在本機瀏覽器，不蒐集任何個人資料
+-->
+<style>
+:root{
+  --blue:#2f5bea; --blue-d:#1c3fb4; --sky:#e8efff; --lemon:#ffd84d; --lemon-d:#e0b400;
+  --orange:#ff8a2a; --red:#ef4f4f; --mint:#3cc3a0; --ink:#1d2433; --muted:#5d6577;
+  --paper:#ffffff; --floor:#f4f1ea; --good:#20a464; --warm:#e0731a;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+html,body{margin:0; min-height:100%}
+body{
+  color:var(--ink); background:var(--sky);
+  font-family:system-ui,-apple-system,"PingFang TC","Microsoft JhengHei","Noto Sans TC",sans-serif;
+  user-select:none; -webkit-user-select:none;
+}
+button{font:inherit; color:inherit; cursor:pointer; touch-action:manipulation}
+button:focus-visible{outline:3px solid var(--orange); outline-offset:3px}
+[hidden]{display:none !important}
+
+/* 遮雨棚 */
+.awning{height:58px; background:repeating-linear-gradient(90deg, var(--blue) 0 44px, #fff 44px 88px); position:relative; box-shadow:0 4px 0 rgba(0,0,0,.08)}
+.awning::after{content:""; position:absolute; left:0; right:0; bottom:-16px; height:16px;
+  background:radial-gradient(circle at 22px 0, var(--blue) 21px, transparent 22px) 0 0/88px 16px,
+             radial-gradient(circle at 66px 0, #fff 21px, transparent 22px) 0 0/88px 16px}
+#app{max-width:1080px; margin:0 auto; padding:26px 16px 28px; min-height:calc(100vh - 58px); display:flex; flex-direction:column}
+.screen{display:none; flex:1; flex-direction:column}
+.screen.active{display:flex}
+
+/* 招牌 */
+.sign{align-self:center; background:var(--lemon); border:4px solid var(--ink); border-radius:18px; padding:8px 26px 10px; text-align:center; box-shadow:6px 6px 0 var(--ink); margin:4px 0 22px; transform:rotate(-1deg)}
+.sign h1{margin:0; font-size:clamp(30px,8.4vw,46px); letter-spacing:5px; line-height:1.15}
+.sign p{margin:2px 0 0; font-weight:800; font-size:15px; color:#6b5300}
+
+/* 按鈕 */
+.btn{border:3px solid var(--ink); border-radius:14px; background:#fff; font-weight:900; padding:10px 16px; box-shadow:4px 4px 0 var(--ink); transition:transform .06s, box-shadow .06s}
+.btn:active{transform:translate(3px,3px); box-shadow:1px 1px 0 var(--ink)}
+.btn.blue{background:var(--blue); color:#fff} .btn.lemon{background:var(--lemon)} .btn.mint{background:var(--mint); color:#fff}
+.btn.small{font-size:15px; padding:7px 12px; box-shadow:3px 3px 0 var(--ink)}
+
+.box{background:var(--paper); border:3px solid var(--ink); border-radius:18px; box-shadow:6px 6px 0 rgba(29,36,51,.9)}
+
+/* ---------- 首頁 ---------- */
+.home-grid{display:grid; grid-template-columns:1fr; gap:24px; align-items:start}
+.shelf{padding:16px 14px 10px}
+.shelf h2{margin:0 0 10px; font-size:18px}
+.shelf-row{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:6px 8px; padding-bottom:10px; border-bottom:8px solid #c9a477; margin-bottom:12px}
+.goods{text-align:center}
+.goods svg{width:100%; max-width:64px; height:auto; display:block; margin:0 auto}
+.tag{display:inline-block; background:var(--lemon); border:2px solid var(--ink); border-radius:6px; font-size:13px; font-weight:900; padding:0 6px; margin-top:2px; white-space:nowrap}
+.levels{padding:18px}
+.levels h2{margin:0 0 12px; font-size:19px}
+.lv{display:flex; align-items:center; gap:12px; width:100%; text-align:left; margin-bottom:12px; padding:12px 14px}
+.lv .t{font-size:21px; display:block}
+.lv .d{font-size:14px; font-weight:700; color:var(--muted); display:block; margin-top:2px}
+.lv .best{margin-left:auto; color:#c08a00; white-space:nowrap}
+.lv .ic{width:46px; height:46px; flex-shrink:0}
+.lv[aria-pressed="true"]{background:#fff6c9; box-shadow:4px 4px 0 var(--orange); border-color:var(--orange)}
+.start{width:100%; font-size:23px; padding:14px; margin-top:4px}
+.toggles{display:flex; gap:12px; justify-content:center; margin-top:16px; flex-wrap:wrap}
+
+/* ---------- 遊戲 ---------- */
+.bar{display:flex; align-items:center; justify-content:space-between; gap:8px 10px; flex-wrap:wrap; margin-bottom:18px}
+.dots{display:flex; gap:4px}
+.dots i{width:13px; height:13px; border-radius:4px; background:#fff; border:2px solid var(--ink); display:block; flex-shrink:0}
+.dots i.ok{background:var(--good)} .dots i.half{background:var(--lemon)} .dots i.miss{background:#c9cdd6} .dots i.now{background:var(--orange)}
+.play{display:grid; grid-template-columns:1fr; gap:22px; align-items:start}
+
+/* 櫃檯 */
+.counter{padding:14px; background:linear-gradient(#fff 0 70%, var(--floor) 70%)}
+.cust{display:flex; gap:10px; align-items:flex-start}
+.cust .face{width:84px; flex-shrink:0}
+.bubble{position:relative; flex:1; background:#fff; border:3px solid var(--ink); border-radius:16px; padding:10px 12px; font-size:18px; font-weight:800; line-height:1.6}
+.bubble::before{content:""; position:absolute; left:-12px; top:22px; border:9px solid transparent; border-right-color:var(--ink); border-left:0}
+.bubble::after{content:""; position:absolute; left:-7px; top:24px; border:7px solid transparent; border-right-color:#fff; border-left:0}
+.items{display:flex; flex-wrap:wrap; gap:14px; justify-content:center; margin:14px 0 6px}
+.items .goods{width:92px}
+.items .goods svg{max-width:84px}
+.items .goods .nm{font-size:14px; font-weight:800; margin-top:2px}
+.items .tag{font-size:16px}
+.paid{display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap; margin-top:8px; font-weight:900; font-size:18px}
+.paid .money svg{height:46px; width:auto}
+.total{margin-top:8px; text-align:center; font-weight:900; font-size:18px; color:var(--blue-d)}
+
+/* 任務區 */
+.task{padding:16px; text-align:center}
+.goal{font-size:20px; font-weight:900; margin:0 0 12px; line-height:1.6}
+.tray{min-height:96px; border:3px dashed #9aa4b8; border-radius:16px; background:#f6f8fc; padding:8px; display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:center}
+.tray .empty{color:#9aa4b8; font-weight:800}
+.tray .grp{position:relative; border:none; background:none; padding:2px; display:flex; align-items:center}
+.tray .grp svg{display:block}
+.tray .grp .stack{display:flex}
+.tray .grp .cnt{position:absolute; right:-10px; top:-10px; background:var(--orange); color:#fff; border:2px solid var(--ink); font-size:14px; font-weight:900; border-radius:999px; padding:0 7px}
+.sum{margin:8px 0 12px; font-weight:900; font-size:18px; color:var(--blue-d); min-height:26px}
+.drawer{display:grid; grid-template-columns:repeat(4,1fr); gap:8px; background:#3a4152; border:3px solid var(--ink); border-radius:14px; padding:10px}
+.drawer.six{grid-template-columns:repeat(6,1fr)}
+.slot{background:#525a6e; border:none; border-radius:10px; padding:8px 2px 6px; display:flex; flex-direction:column; align-items:center; gap:4px; color:#fff; font-weight:900; font-size:14px}
+.slot:active{transform:translateY(2px)}
+.slot svg{height:46px; width:auto; max-width:100%}
+.done{width:100%; margin-top:14px; font-size:21px; padding:12px}
+.row2{display:flex; gap:10px; margin-top:14px}
+.sumopts{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+.sumopts .btn{font-size:24px; padding:14px 6px}
+.sumopts .btn.right{background:var(--good); color:#fff}
+.sumopts .btn.wrong{background:#ffe1c4; opacity:.7}
+.step{display:inline-block; background:var(--blue); color:#fff; border-radius:999px; font-size:14px; padding:2px 10px; margin-bottom:6px}
+.row2 .btn{flex:1}
+.feedback{min-height:30px; font-size:21px; font-weight:900; margin-top:12px}
+.feedback.good{color:var(--good)} .feedback.warm{color:var(--warm)}
+.hint{margin-top:8px; font-size:17px; font-weight:700; line-height:1.8; text-align:left; background:#fff7d6; border:2px solid #f0d36a; border-radius:12px; padding:10px 12px}
+.hint:empty{display:none}
+.chain{display:flex; flex-wrap:wrap; align-items:center; gap:4px; margin-top:4px}
+.chain b{background:#fff; border:2px solid var(--ink); border-radius:8px; padding:0 8px}
+.chain i{font-style:normal; color:var(--blue-d); font-weight:900}
+.pop{animation:pop .35s ease}
+@keyframes pop{50%{transform:scale(1.06)}}
+.shake{animation:shake .3s}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+
+/* ---------- 結果 ---------- */
+.result{max-width:520px; margin:12px auto 0; width:100%; padding:24px 20px; text-align:center}
+.stars{display:flex; justify-content:center; gap:8px}
+.stars svg{width:54px; height:54px}
+.r-title{font-size:30px; font-weight:900; margin:6px 0}
+.r-line{font-size:18px; font-weight:800; color:var(--muted)}
+.r-face{width:110px; margin:6px auto}
+.r-btns{display:flex; gap:12px; margin-top:20px}
+.r-btns .btn{flex:1; font-size:19px}
+
+/* ---------- 注音（直式，跟國語課本一樣） ---------- */
+.zc{display:inline-flex; align-items:center; white-space:nowrap; text-indent:0}
+.zp{position:relative; display:inline-flex; flex-direction:column; align-items:center; justify-content:center;
+  font-size:max(.32em, 8px); line-height:1.05; letter-spacing:0; margin:0 .6em 0 .12em; font-weight:700}
+.zp i{display:block; font-style:normal}
+.zp .tn{position:absolute; left:100%; bottom:.15em; margin-left:.05em}
+.zp .lt{position:absolute; top:-.9em; left:0; right:0; text-align:center}
+body.zy-on .hint, body.zy-on .bubble, body.zy-on .goal{line-height:2.2}
+body.zy-on .sign h1{font-size:clamp(24px,6.2vw,42px); letter-spacing:0}
+.sign{max-width:100%}
+body.zy-on .shelf .tag{white-space:normal; line-height:1.9; padding:2px 4px}
+body.zy-on .items .tag, body.zy-on .items .nm{white-space:normal}
+
+@media (min-width:860px){
+  .home-grid{grid-template-columns:1.1fr 1fr; gap:30px}
+  .play{grid-template-columns:1fr 1fr; gap:30px}
+}
+@media (prefers-reduced-motion: reduce){ *,*::before,*::after{animation:none !important; transition:none !important} }
+</style>
+</head>
+<body>
+<div class="awning"></div>
+<div id="app">
+
+  <!-- 首頁 -->
+  <section id="home" class="screen active">
+    <div class="sign"><h1 data-zy="">文具店開張囉</h1><p data-zy="">當一天文具店的小老闆</p></div>
+    <div class="home-grid">
+      <div class="box shelf"><h2 data-zy="">今天的商品</h2><div id="shelf"></div></div>
+      <div class="box levels">
+        <h2 data-zy="">選難度</h2>
+        <div id="levelOpts"></div>
+        <button class="btn blue start" id="startBtn" data-zy="">開店囉！</button>
+        <div class="toggles">
+          <button class="btn small" id="soundBtn"></button>
+          <button class="btn small lemon" id="zyBtn"></button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 遊戲 -->
+  <section id="game" class="screen">
+    <div class="bar">
+      <button class="btn small" id="backBtn" data-zy="">回首頁</button>
+      <div class="dots" id="dots"></div>
+    </div>
+    <div class="play">
+      <div class="box counter">
+        <div class="cust"><div class="face" id="face"></div><div class="bubble" id="bubble"></div></div>
+        <div class="items" id="items"></div>
+        <div class="total" id="total"></div>
+        <div class="paid" id="paid"></div>
+      </div>
+      <div class="box task">
+        <p class="goal" id="goal"></p>
+        <div class="sumopts" id="sumOpts" hidden></div>
+        <div id="changeArea">
+        <div class="tray" id="tray"></div>
+        <div class="sum" id="sum"></div>
+        <div class="drawer" id="drawer"></div>
+        <div class="row2">
+          <button class="btn" id="clearBtn" data-zy="">全部拿回來</button>
+          <button class="btn mint" id="doneBtn"></button>
+        </div>
+        </div>
+        <div class="feedback" id="feedback"></div>
+        <div class="hint" id="hint"></div>
+        <button class="btn blue done" id="nextBtn" hidden></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 結果 -->
+  <section id="result" class="screen">
+    <div class="box result" id="resultBox"></div>
+  </section>
+</div>
+
+<script>
+/* =====================================================================
+   設定區
+   ===================================================================== */
+const TOTAL = 8;   // 一回幾位客人
+const LEVELS = {
+  easy: { name:'簡單', desc:'幫小客人湊出剛好的錢', money:[1,5,10,50] },
+  mid:  { name:'進階', desc:'客人買一兩樣東西，你來找錢', money:[1,5,10,50] },
+  hard: { name:'困難', desc:'買好幾樣：先算一共多少，再找錢', money:[1,5,10,50,100,500] }
+};
+/* 商品：名字、價錢（元） */
+const GOODS = [
+  { k:'pencil', name:'鉛筆',   price:8 },
+  { k:'eraser', name:'橡皮擦', price:12 },
+  { k:'sticker',name:'貼紙',   price:10 },
+  { k:'ruler',  name:'尺',     price:15 },
+  { k:'glue',   name:'膠水',   price:18 },
+  { k:'notes',  name:'便利貼', price:20 },
+  { k:'book',   name:'筆記本', price:25 },
+  { k:'scissor',name:'剪刀',   price:35 },
+  { k:'marker', name:'彩色筆', price:45 },
+  { k:'crayon', name:'蠟筆',   price:60 },
+  { k:'case',   name:'鉛筆盒', price:120 }
+];
+const PRAISE  = ['謝謝老闆！','太棒了，剛剛好！','你是很棒的小老闆！','完全正確！'];
+const COMFORT = ['沒關係！','差一點點！','加油，你可以的！','再數一次！'];
+
+/* ===== 小工具 ===== */
+const $ = function(id){ return document.getElementById(id); };
+function pick(a){ return a[Math.floor(Math.random()*a.length)]; }
+function randInt(a,b){ return a + Math.floor(Math.random()*(b-a+1)); }
+function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); const t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
+function show(id){ document.querySelectorAll('.screen').forEach(function(s){ s.classList.toggle('active', s.id===id); }); window.scrollTo(0,0); }
+const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const store = (function(){
+  try{ const s = JSON.parse(localStorage.getItem('little-shop')); if(s) return s; }catch(e){}
+  return { level:'easy', zhuyin:false, best:{} };
+})();
+function save(){ try{ localStorage.setItem('little-shop', JSON.stringify(store)); }catch(e){} }
+
+/* =====================================================================
+   原創圖案：文具、錢、客人
+   ===================================================================== */
+const O = 'stroke="#1d2433" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"';
+function goodsSVG(k){
+  const g = {
+    pencil: '<g transform="rotate(-35 30 30)"><rect x="10" y="24" width="34" height="12" fill="#ffd84d" '+O+'/><path d="M44 24 l10 6 -10 6z" fill="#f7d8b0" '+O+'/><path d="M51 28.2 l3 1.8 -3 1.8z" fill="#1d2433"/><rect x="5" y="24" width="7" height="12" rx="2" fill="#ff8fb1" '+O+'/><path d="M10 30 h34" stroke="#e0b400" stroke-width="1.6"/></g>',
+    eraser: '<rect x="12" y="20" width="36" height="22" rx="5" fill="#fff" '+O+'/><path d="M24 20 h16 v22 h-16z" fill="#2f5bea" '+O+'/><path d="M28 28 h8 M28 33 h8" stroke="#fff" stroke-width="2"/>',
+    sticker:'<path d="M30 50 C14 39 8 31 8 23 C8 15 14 10 20.5 10 C25 10 28.5 12.5 30 16 C31.5 12.5 35 10 39.5 10 C46 10 52 15 52 23 C52 31 46 39 30 50 Z" fill="#ff6f91" '+O+'/><path d="M17 21 q2 -5 7 -5" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".85"/>',
+    ruler:  '<g transform="rotate(-20 30 30)"><rect x="4" y="23" width="52" height="14" rx="2" fill="#3cc3a0" '+O+'/><path d="M10 23v5M16 23v8M22 23v5M28 23v8M34 23v5M40 23v8M46 23v5M52 23v8" stroke="#1d2433" stroke-width="1.6"/></g>',
+    glue:   '<rect x="19" y="20" width="22" height="32" rx="6" fill="#fff" '+O+'/><rect x="19" y="30" width="22" height="12" fill="#ff8a2a" '+O+'/><path d="M24 20 v-6 h12 v6" fill="#ef4f4f" '+O+'/><path d="M28 14 v-6 h4 v6" fill="#ef4f4f" '+O+'/>',
+    notes:  '<rect x="16" y="18" width="32" height="32" rx="3" fill="#ffb3c7" '+O+'/><rect x="12" y="14" width="32" height="32" rx="3" fill="#ffd84d" '+O+'/><path d="M17 24 h22 M17 30 h22 M17 36 h14" stroke="#c99a00" stroke-width="2"/>',
+    book:   '<rect x="14" y="10" width="34" height="42" rx="3" fill="#2f5bea" '+O+'/><rect x="22" y="20" width="20" height="9" rx="2" fill="#fff" '+O+'/><path d="M14 16 h-3 M14 24 h-3 M14 32 h-3 M14 40 h-3 M14 48 h-3" stroke="#1d2433" stroke-width="2.4"/>',
+    scissor:'<circle cx="18" cy="42" r="7" fill="none" stroke="#ef4f4f" stroke-width="4"/><circle cx="36" cy="44" r="7" fill="none" stroke="#ef4f4f" stroke-width="4"/><path d="M22 36 L42 10 M32 37 L24 8" stroke="#9aa4b8" stroke-width="5" stroke-linecap="round"/><circle cx="27.5" cy="27" r="2" fill="#1d2433"/>',
+    marker: '<g '+O+'><rect x="12" y="14" width="9" height="34" rx="3" fill="#ef4f4f"/><rect x="25.5" y="10" width="9" height="38" rx="3" fill="#2f5bea"/><rect x="39" y="14" width="9" height="34" rx="3" fill="#3cc3a0"/></g><path d="M12 22 h9 M25.5 18 h9 M39 22 h9" stroke="#fff" stroke-width="2"/>',
+    crayon: '<rect x="10" y="22" width="40" height="28" rx="3" fill="#ffd84d" '+O+'/><g '+O+'><path d="M15 22 v-8 l3 -5 3 5 v8z" fill="#ef4f4f"/><path d="M24 22 v-10 l3 -5 3 5 v10z" fill="#2f5bea"/><path d="M33 22 v-8 l3 -5 3 5 v8z" fill="#3cc3a0"/><path d="M42 22 v-6 l3 -5 3 5 v6z" fill="#ff8a2a"/></g><rect x="17" y="30" width="26" height="10" rx="2" fill="#fff" '+O+'/>',
+    case:   '<rect x="6" y="20" width="48" height="24" rx="10" fill="#8a5cf0" '+O+'/><path d="M10 26 h40" stroke="#ffd84d" stroke-width="2.4" stroke-dasharray="3 3"/><circle cx="46" cy="26" r="3" fill="#ffd84d" '+O+'/>'
+  }[k];
+  return '<svg viewBox="0 0 60 60" aria-hidden="true">'+g+'</svg>';
+}
+/* 錢：只標面額和顏色的練習用錢 */
+const COIN = { 1:{ r:15, c:'#d08a52', d:'#9b5e2c' }, 5:{ r:18, c:'#cfd5dd', d:'#8c96a3' }, 10:{ r:20, c:'#e3e7ec', d:'#9aa4b0' }, 50:{ r:22, c:'#f0cd5a', d:'#b48d14' } };
+const BILL = { 100:{ c:'#ff8b8b', d:'#c94848' }, 500:{ c:'#c99b74', d:'#8a5f3c' }, 1000:{ c:'#7fa8e8', d:'#3f6cb8' } };
+function moneySVG(v, h){
+  if(COIN[v]){
+    const c = COIN[v], s = c.r*2 + 4;
+    return '<svg viewBox="0 0 '+s+' '+s+'" width="'+s+'" height="'+s+'" aria-label="'+v+' 元"><circle cx="'+(s/2)+'" cy="'+(s/2)+'" r="'+c.r+'" fill="'+c.c+'" stroke="#1d2433" stroke-width="2"/>'
+      + '<circle cx="'+(s/2)+'" cy="'+(s/2)+'" r="'+(c.r-4)+'" fill="none" stroke="'+c.d+'" stroke-width="1.6"/>'
+      + '<text x="'+(s/2)+'" y="'+(s/2+ (v>=10?5.5:5))+'" text-anchor="middle" font-size="'+(v>=10?15:14)+'" font-weight="900" fill="#1d2433" font-family="system-ui,sans-serif">'+v+'</text></svg>';
+  }
+  const b = BILL[v];
+  return '<svg viewBox="0 0 80 42" width="80" height="42" aria-label="'+v+' 元"><rect x="1.5" y="1.5" width="77" height="39" rx="4" fill="'+b.c+'" stroke="#1d2433" stroke-width="2"/>'
+    + '<rect x="6" y="6" width="68" height="30" rx="3" fill="none" stroke="'+b.d+'" stroke-width="1.5"/>'
+    + '<circle cx="20" cy="21" r="8" fill="#fff" opacity=".6"/>'
+    + '<text x="50" y="26" text-anchor="middle" font-size="16" font-weight="900" fill="#1d2433" font-family="system-ui,sans-serif">'+v+'</text>'
+    + '<text x="20" y="24.5" text-anchor="middle" font-size="7" font-weight="900" fill="'+b.d+'" font-family="system-ui,\'PingFang TC\',\'Microsoft JhengHei\',sans-serif">練習</text></svg>';
+}
+/* 客人：不同髮型和衣服顏色的小朋友 */
+const CUST = [
+  { hair:'#3b2a1a', shirt:'#ef4f4f', style:'bob' }, { hair:'#1d2433', shirt:'#2f5bea', style:'spike' },
+  { hair:'#8a4b1f', shirt:'#3cc3a0', style:'pony' }, { hair:'#2b2b2b', shirt:'#ff8a2a', style:'spike' },
+  { hair:'#5a3a20', shirt:'#8a5cf0', style:'bob' }
+];
+function faceSVG(i, happy){
+  const p = CUST[i % CUST.length];
+  const hair = { bob:'<path d="M18 40 q-2 -24 22 -26 q24 2 22 26 q-4 -14 -22 -14 q-18 0 -22 14z" fill="'+p.hair+'"/>',
+                 spike:'<path d="M20 34 l4 -14 6 8 4 -12 6 10 6 -10 4 12 6 -8 4 14 q-20 -10 -40 0z" fill="'+p.hair+'"/>',
+                 pony:'<path d="M18 38 q0 -24 22 -24 q22 0 22 24 q-6 -12 -22 -12 q-16 0 -22 12z" fill="'+p.hair+'"/><path d="M60 26 q14 6 6 22 q-4 -10 -8 -14z" fill="'+p.hair+'"/>' }[p.style];
+  return '<svg viewBox="0 0 80 84" aria-hidden="true">'
+    + '<path d="M14 84 q0 -20 26 -20 q26 0 26 20z" fill="'+p.shirt+'" stroke="#1d2433" stroke-width="2.4"/>'
+    + '<circle cx="40" cy="40" r="22" fill="#ffd9b8" stroke="#1d2433" stroke-width="2.4"/>' + hair
+    + (happy ? '<path d="M30 40 q3 -4 6 0 M44 40 q3 -4 6 0" fill="none" stroke="#1d2433" stroke-width="2.6" stroke-linecap="round"/>'
+             : '<circle cx="33" cy="41" r="2.6" fill="#1d2433"/><circle cx="47" cy="41" r="2.6" fill="#1d2433"/>')
+    + '<path d="M34 49 q6 '+(happy?7:4)+' 12 0" fill="'+(happy?'#c2453b':'none')+'" stroke="#1d2433" stroke-width="2.4" stroke-linecap="round"/>'
+    + '<circle cx="27" cy="47" r="3" fill="#ff8fa3" opacity=".6"/><circle cx="53" cy="47" r="3" fill="#ff8fa3" opacity=".6"/></svg>';
+}
+function starSVG(on){ return '<svg viewBox="0 0 24 24"><path d="M12 2.2l2.95 6.1 6.7.85-4.95 4.6 1.3 6.65L12 17.1l-5.95 3.3 1.3-6.65L2.4 9.15l6.7-.85z" fill="'+(on?'#ffd84d':'#e2e5ec')+'" stroke="#1d2433" stroke-width="1.6" stroke-linejoin="round"/></svg>'; }
+
+/* ===== 音效 ===== */
+let ac = null, soundOn = true;
+function tone(freqs, dur, type, gap){
+  if(!soundOn) return;
+  try{
+    ac = ac || new (window.AudioContext || window.webkitAudioContext)();
+    freqs.forEach(function(f,i){
+      const o = ac.createOscillator(), g = ac.createGain(), t = ac.currentTime + i*(gap||dur);
+      o.type = type||'sine'; o.frequency.value = f;
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.18, t+0.01); g.gain.exponentialRampToValueAtTime(0.0001, t+dur);
+      o.connect(g); g.connect(ac.destination); o.start(t); o.stop(t+dur+0.02);
+    });
+  }catch(e){}
+}
+function sCoin(){ tone([1800, 2400], 0.06, 'triangle'); }
+function sRegister(){ tone([1568, 2093, 2637], 0.09, 'square'); tone([3136], 0.5, 'sine', 0.3); }
+function sSoft(){ tone([392, 349], 0.14, 'triangle'); }
+
+/* =====================================================================
+   注音：ZY 由產生器填入（臺灣國語課本讀音），破音字依詞語另外標
+   ===================================================================== */
+const ZY = {"一": "ㄧ", "上": "ㄕㄤˋ", "下": "ㄒㄧㄚˋ", "不": "ㄅㄨˋ", "且": "ㄑㄧㄝˇ", "中": "ㄓㄨㄥ", "也": "ㄧㄝˇ", "了": "˙ㄌㄜ", "人": "ㄖㄣˊ", "今": "ㄐㄧㄣ", "以": "ㄧˇ", "位": "ㄨㄟˋ", "你": "ㄋㄧˇ", "來": "ㄌㄞˊ", "例": "ㄌㄧˋ", "便": "ㄅㄧㄢˋ", "係": "ㄒㄧˋ", "個": "ㄍㄜˋ", "做": "ㄗㄨㄛˋ", "價": "ㄐㄧㄚˋ", "元": "ㄩㄢˊ", "先": "ㄒㄧㄢ", "全": "ㄑㄩㄢˊ", "兩": "ㄌㄧㄤˇ", "共": "ㄍㄨㄥˋ", "其": "ㄑㄧˊ", "具": "ㄐㄩˋ", "再": "ㄗㄞˋ", "出": "ㄔㄨ", "刀": "ㄉㄠ", "利": "ㄌㄧˋ", "到": "ㄉㄠˋ", "剛": "ㄍㄤ", "剪": "ㄐㄧㄢˇ", "加": "ㄐㄧㄚ", "厲": "ㄌㄧˋ", "可": "ㄎㄜˇ", "吧": "˙ㄅㄚ", "和": "ㄏㄢˋ", "品": "ㄆㄧㄣˇ", "商": "ㄕㄤ", "喔": "ㄛ", "單": "ㄉㄢ", "嗎": "˙ㄇㄚ", "囉": "˙ㄌㄨㄛ", "回": "ㄏㄨㄟˊ", "困": "ㄎㄨㄣˋ", "在": "ㄗㄞˋ", "多": "ㄉㄨㄛ", "大": "ㄉㄚˋ", "天": "ㄊㄧㄢ", "太": "ㄊㄞˋ", "好": "ㄏㄠˇ", "如": "ㄖㄨˊ", "子": "˙ㄗ", "完": "ㄨㄢˊ", "客": "ㄎㄜˋ", "害": "ㄏㄞˋ", "對": "ㄉㄨㄟˋ", "小": "ㄒㄧㄠˇ", "少": "ㄕㄠˇ", "就": "ㄐㄧㄡˋ", "尺": "ㄔˇ", "差": "ㄔㄚ", "己": "ㄐㄧˇ", "幫": "ㄅㄤ", "幾": "ㄐㄧˇ", "店": "ㄉㄧㄢˋ", "度": "ㄉㄨˋ", "彩": "ㄘㄞˇ", "往": "ㄨㄤˇ", "很": "ㄏㄣˇ", "後": "ㄏㄡˋ", "從": "ㄘㄨㄥˊ", "想": "ㄒㄧㄤˇ", "我": "ㄨㄛˇ", "打": "ㄉㄚˇ", "找": "ㄓㄠˇ", "拿": "ㄋㄚˊ", "提": "ㄊㄧˊ", "擦": "ㄘㄚ", "放": "ㄈㄤˋ", "效": "ㄒㄧㄠˋ", "數": "ㄕㄨˇ", "文": "ㄨㄣˊ", "明": "ㄇㄧㄥˊ", "是": "ㄕˋ", "最": "ㄗㄨㄟˋ", "會": "ㄏㄨㄟˋ", "有": "ㄧㄡˇ", "本": "ㄅㄣˇ", "東": "ㄉㄨㄥ", "果": "ㄍㄨㄛˇ", "案": "ㄢˋ", "棒": "ㄅㄤˋ", "樣": "ㄧㄤˋ", "橡": "ㄒㄧㄤˋ", "次": "ㄘˋ", "正": "ㄓㄥˋ", "水": "ㄕㄨㄟˇ", "沒": "ㄇㄟˊ", "油": "ㄧㄡˊ", "注": "ㄓㄨˋ", "湊": "ㄘㄡˋ", "烊": "ㄧㄤˊ", "現": "ㄒㄧㄢˋ", "用": "ㄩㄥˋ", "當": "ㄉㄤ", "的": "˙ㄉㄜ", "皮": "ㄆㄧˊ", "盒": "ㄏㄜˊ", "盤": "ㄆㄢˊ", "看": "ㄎㄢˋ", "確": "ㄑㄩㄝˋ", "示": "ㄕˋ", "秘": "ㄇㄧˋ", "筆": "ㄅㄧˇ", "答": "ㄉㄚˊ", "算": "ㄙㄨㄢˋ", "箱": "ㄒㄧㄤ", "簡": "ㄐㄧㄢˇ", "紙": "ㄓˇ", "級": "ㄐㄧˊ", "結": "ㄐㄧㄝˊ", "給": "ㄍㄟˇ", "練": "ㄌㄧㄢˋ", "習": "ㄒㄧˊ", "老": "ㄌㄠˇ", "而": "ㄦˊ", "膠": "ㄐㄧㄠ", "自": "ㄗˋ", "色": "ㄙㄜˋ", "蠟": "ㄌㄚˋ", "補": "ㄅㄨˇ", "西": "ㄒㄧ", "要": "ㄧㄠˋ", "記": "ㄐㄧˋ", "訣": "ㄐㄩㄝˊ", "試": "ㄕˋ", "請": "ㄑㄧㄥˇ", "謝": "ㄒㄧㄝˋ", "買": "ㄇㄞˇ", "貼": "ㄊㄧㄝ", "超": "ㄔㄠ", "這": "ㄓㄜˋ", "進": "ㄐㄧㄣˋ", "選": "ㄒㄩㄢˇ", "還": "ㄏㄞˊ", "部": "ㄅㄨˋ", "鉛": "ㄑㄧㄢ", "錢": "ㄑㄧㄢˊ", "錯": "ㄘㄨㄛˋ", "開": "ㄎㄞ", "闆": "ㄅㄢˇ", "關": "ㄍㄨㄢ", "階": "ㄐㄧㄝ", "難": "ㄋㄢˊ", "面": "ㄇㄧㄢˋ", "音": "ㄧㄣ", "頁": "ㄧㄝˋ", "首": "ㄕㄡˇ", "點": "ㄉㄧㄢˇ", "齊": "ㄑㄧˊ", "著": "˙ㄓㄜ", "為": "ㄨㄟˋ", "那": "ㄋㄚˋ", "識": "ㄕˋ", "長": "ㄔㄤˊ", "種": "ㄓㄨㄥˇ", "樂": "ㄌㄜˋ", "得": "ㄉㄜˊ", "累": "ㄌㄟˇ", "綜": "ㄗㄨㄥˋ", "削": "ㄒㄧㄠ", "行": "ㄒㄧㄥˊ", "分": "ㄈㄣ", "剩": "ㄕㄥˋ", "十": "ㄕˊ", "把": "ㄅㄚˇ", "接": "ㄐㄧㄝ", "整": "ㄓㄥˇ", "步": "ㄅㄨˋ", "百": "ㄅㄞˇ", "第": "ㄉㄧˋ", "起": "ㄑㄧˇ"};
+const ZY_WORDS = {"關係": ["ㄍㄨㄢ", "˙ㄒㄧ"], "起來": ["ㄑㄧˇ", "˙ㄌㄞ"], "回來": ["ㄏㄨㄟˊ", "˙ㄌㄞ"], "出來": ["ㄔㄨ", "˙ㄌㄞ"], "數數": ["ㄕㄨˇ", "ㄕㄨˇ"], "東西": ["ㄉㄨㄥ", "˙ㄒㄧ"], "客人": ["ㄎㄜˋ", "ㄖㄣˊ"], "便利貼": ["ㄅㄧㄢˋ", "ㄌㄧˋ", "ㄊㄧㄝ"], "謝謝": ["ㄒㄧㄝˋ", "˙ㄒㄧㄝ"]};
+function rubyOf(c, z){
+  let light = false, tn = '';
+  if(z.charAt(0)==='˙'){ light = true; z = z.slice(1); }
+  if('ˊˇˋ'.indexOf(z.charAt(z.length-1)) >= 0){ tn = z.charAt(z.length-1); z = z.slice(0,-1); }
+  let col = '';
+  for(let k=0;k<z.length;k++) col += '<i>'+z.charAt(k)+'</i>';
+  return '<span class="zc">'+c+'<span class="zp">'+(light?'<i class="lt">˙</i>':'')+col+(tn?'<i class="tn">'+tn+'</i>':'')+'</span></span>';
+}
+function zy(str){
+  return String(str).split(/(<[^>]*>)/).map(function(part){
+    if(part.charAt(0)==='<') return part;
+    let out = '', i = 0;
+    while(i < part.length){
+      let hit = null;
+      for(const w in ZY_WORDS){ if(part.substr(i,w.length)===w){ hit = w; break; } }
+      if(hit){ for(let k=0;k<hit.length;k++) out += rubyOf(hit[k], ZY_WORDS[hit][k]); i += hit.length; continue; }
+      const c = part[i]; out += ZY[c] ? rubyOf(c, ZY[c]) : c; i++;
+    }
+    return out;
+  }).join('');
+}
+/* SVG 裡的文字不加注音 */
+function Z(str){
+  if(!store.zhuyin) return str;
+  return String(str).split(/(<svg[\s\S]*?<\/svg>)/).map(function(p){ return p.indexOf('<svg')===0 ? p : zy(p); }).join('');
+}
+function applyStaticZy(){
+  document.querySelectorAll('[data-zy]').forEach(function(el){
+    if(!el.dataset.zy) el.dataset.zy = el.textContent.trim();
+    el.innerHTML = Z(el.dataset.zy);
+  });
+}
+
+/* ===== 首頁 ===== */
+function renderHome(){
+  $('shelf').innerHTML = [GOODS.slice(0,4), GOODS.slice(4,8), GOODS.slice(8)].map(function(row){
+    return '<div class="shelf-row">'+row.map(function(g){ return '<div class="goods">'+goodsSVG(g.k)+'<span class="tag">'+Z(g.name+' '+g.price+' 元')+'</span></div>'; }).join('')+'</div>';
+  }).join('');
+  const icons = { easy:moneySVG(5), mid:moneySVG(10), hard:moneySVG(100) };
+  $('levelOpts').innerHTML = Object.keys(LEVELS).map(function(k){
+    const b = store.best[k];
+    return '<button class="btn lv" data-level="'+k+'" aria-pressed="'+(store.level===k)+'"><span class="ic">'+icons[k]+'</span><span><span class="t">'+Z(LEVELS[k].name)+'</span><span class="d">'+Z(LEVELS[k].desc)+'</span></span>'
+      + (b ? '<span class="best">'+'★'.repeat(b)+'☆'.repeat(3-b)+'</span>' : '') + '</button>';
+  }).join('');
+  document.querySelectorAll('.lv .ic svg').forEach(function(s){ s.style.width = '100%'; s.style.height = '100%'; });
+  document.querySelectorAll('[data-level]').forEach(function(b){ b.onclick = function(){ store.level = b.dataset.level; save(); renderHome(); }; });
+  $('soundBtn').innerHTML = Z('音效：' + (soundOn ? '開' : '關'));
+  $('zyBtn').innerHTML = 'ㄅ ' + Z('注音：' + (store.zhuyin ? '開' : '關'));
+}
+$('soundBtn').onclick = function(){ soundOn = !soundOn; renderHome(); };
+$('zyBtn').onclick = function(){ store.zhuyin = !store.zhuyin; save(); refreshZy(); };
+function refreshZy(){ document.body.classList.toggle('zy-on', !!store.zhuyin); applyStaticZy(); renderHome(); }
+
+/* =====================================================================
+   出題
+   ===================================================================== */
+let level, qi, q, results, locked, tray, custIdx, timers = [];
+function later(fn, ms){ timers.push(setTimeout(fn, ms)); }
+function clearTimers(){ timers.forEach(clearTimeout); timers = []; }
+
+/* 用最少的錢湊出 n 元（新台幣面額用「先拿大的」就是最少） */
+function fewest(n, denoms){
+  const out = {}, ds = denoms.slice().sort(function(a,b){ return b-a; });
+  ds.forEach(function(d){ const c = Math.floor(n/d); if(c){ out[d] = c; n -= c*d; } });
+  return out;
+}
+function describe(cnt){
+  return Object.keys(cnt).map(Number).sort(function(a,b){ return b-a; }).map(function(d){ return cnt[d]+' 個 '+d+' 元'; }).join('、');
+}
+function priceOf(g){ return level==='easy' ? g.price : g.price + pick([0,0,1,2,3,-1,-2]); }
+
+function makeQ(){
+  if(level==='easy'){
+    const g = pick(GOODS.filter(function(x){ return x.price <= 60; }));
+    const items = [{ g:g, price:g.price }];
+    return { items:items, total:g.price, pay:null, target:g.price };
+  }
+  if(level==='mid'){
+    for(let t=0;t<100;t++){
+      const n = Math.random() < 0.5 ? 1 : 2;
+      const gs = shuffle(GOODS.filter(function(x){ return x.price <= 45; })).slice(0, n);
+      const items = gs.map(function(g){ return { g:g, price:priceOf(g) }; });
+      const total = items.reduce(function(s,x){ return s + x.price; }, 0);
+      const pay = total < 50 && Math.random() < 0.5 ? 50 : 100;
+      if(total >= pay || total > 95) continue;
+      return { items:items, total:total, pay:pay, target:pay-total };
+    }
+  }
+  for(let t=0;t<100;t++){
+    const n = randInt(2,3);
+    const gs = shuffle(GOODS.slice()).slice(0, n);
+    const items = gs.map(function(g){ return { g:g, price:priceOf(g) }; });
+    const total = items.reduce(function(s,x){ return s + x.price; }, 0);
+    const pay = total < 100 ? (Math.random() < 0.5 ? 100 : 500) : 500;
+    if(total >= pay) continue;
+    return { items:items, total:total, pay:pay, target:pay-total };
+  }
+}
+
+/* =====================================================================
+   遊戲流程
+   ===================================================================== */
+function startGame(){ level = store.level; qi = 0; results = []; custIdx = randInt(0,4); clearTimers(); show('game'); nextQ(); }
+function renderDots(){ let s=''; for(let i=0;i<TOTAL;i++){ const r=results[i]; s += '<i class="'+(r||(i===qi?'now':''))+'"></i>'; } $('dots').innerHTML = s; }
+function itemNames(){ return q.items.map(function(x){ return x.g.name; }).join('和'); }
+
+function nextQ(){
+  clearTimers();
+  if(qi >= TOTAL){ finish(); return; }
+  q = makeQ(); q.retry = false; q.sumRetry = false; q.sumMiss = false; locked = false; tray = {}; custIdx++;
+  $('face').innerHTML = faceSVG(custIdx, false);
+  $('items').innerHTML = q.items.map(function(x){ return '<div class="goods">'+goodsSVG(x.g.k)+'<div class="nm">'+Z(x.g.name)+'</div><span class="tag">'+Z(x.price+' 元')+'</span></div>'; }).join('');
+  if(level==='easy'){
+    $('bubble').innerHTML = Z('我想買'+itemNames()+'，可是我不太會數錢，可以幫我拿出 '+q.total+' 元嗎？');
+    $('goal').innerHTML = Z('從錢箱拿出剛好 '+q.total+' 元');
+    $('total').innerHTML = ''; $('paid').innerHTML = '';
+    $('doneBtn').innerHTML = Z('拿好了');
+  }else{
+    $('bubble').innerHTML = Z('我要買'+itemNames()+'。這是 '+q.pay+' 元，請找錢給我！');
+    $('total').innerHTML = level==='mid' ? Z('一共 '+q.total+' 元') : '';
+    $('paid').innerHTML = Z('客人給你') + '<span class="money">'+moneySVG(q.pay)+'</span>';
+    $('goal').innerHTML = Z('要找客人多少錢？從錢箱拿出來');
+    $('doneBtn').innerHTML = Z('找好了');
+  }
+  $('drawer').className = 'drawer' + (LEVELS[level].money.length > 4 ? ' six' : '');
+  $('drawer').innerHTML = LEVELS[level].money.map(function(v){ return '<button class="slot" data-v="'+v+'">'+moneySVG(v)+'<span>'+Z(v+' 元')+'</span></button>'; }).join('');
+  Array.from($('drawer').children).forEach(function(b){ b.onclick = function(){ addMoney(+b.dataset.v); }; });
+  $('feedback').className = 'feedback'; $('feedback').textContent = '';
+  $('hint').innerHTML = ''; $('nextBtn').hidden = true;
+  $('doneBtn').disabled = false; $('clearBtn').disabled = false;
+  renderTray(); renderDots();
+  if(level==='hard') askSum(); else showChange();
+}
+
+/* ===== 困難：第一步先算一共多少錢 ===== */
+function showChange(){ q.phase = 'change'; $('sumOpts').hidden = true; $('changeArea').hidden = false; }
+function askSum(){
+  q.phase = 'sum';
+  $('changeArea').hidden = true; $('sumOpts').hidden = false;
+  $('goal').innerHTML = '<span class="step">'+Z('第 1 步')+'</span><br>' + Z('客人買的東西，一共多少錢？');
+  const t = q.total, set = new Set([t]);
+  shuffle([t+10, t-10, t+1, t-1, t+5, t-5, t+100]).forEach(function(v){ if(set.size < 4 && v > 0) set.add(v); });
+  $('sumOpts').innerHTML = shuffle(Array.from(set)).map(function(v){ return '<button class="btn" data-v="'+v+'">'+Z(v+' 元')+'</button>'; }).join('');
+  Array.from($('sumOpts').children).forEach(function(b){ b.onclick = function(){ answerSum(+b.dataset.v, b); }; });
+}
+function sumSteps(){
+  /* 一樣一樣加：8 + 122 = 130，130 + 25 = 155 */
+  let cur = q.items[0].price, out = [];
+  for(let i=1;i<q.items.length;i++){ out.push(cur+' + '+q.items[i].price+' = '+(cur+q.items[i].price)); cur += q.items[i].price; }
+  return out;
+}
+function answerSum(v, btn){
+  if(q.phase !== 'sum' || btn.disabled) return;
+  if(v === q.total){
+    btn.classList.add('right'); sCoin(); goChange('對了！一共 '+q.total+' 元，接著找錢給客人。');
+    return;
+  }
+  btn.classList.add('wrong'); btn.disabled = true; sSoft();
+  if(!q.sumRetry){
+    q.sumRetry = true;
+    const st = sumSteps();
+    $('feedback').className = 'feedback warm';
+    $('feedback').innerHTML = Z(pick(COMFORT) + '看看提示，再算一次！');
+    $('hint').innerHTML = Z('一樣一樣加起來：先算 '+st[0].split(' = ')[0]+' = ?' + (st.length > 1 ? '，再把答案加 '+q.items[2].price+'。' : '。')
+      + '<br>小秘訣：先加整十、整百的部分，再加剩下的。');
+  }else{
+    q.sumMiss = true;
+    Array.from($('sumOpts').children).forEach(function(b){ if(+b.dataset.v === q.total) b.classList.add('right'); });
+    goChange('沒關係！' + sumSteps().join('，') + '，一共 '+q.total+' 元。接著找錢給客人。');
+  }
+}
+function goChange(msg){
+  q.phase = 'wait';
+  $('feedback').className = 'feedback good';
+  $('feedback').innerHTML = Z(msg);
+  $('hint').innerHTML = '';
+  $('total').innerHTML = Z('一共 '+q.total+' 元');
+  later(function(){
+    showChange();
+    $('goal').innerHTML = '<span class="step">'+Z('第 2 步')+'</span><br>' + Z('要找客人多少錢？從錢箱拿出來');
+    $('feedback').className = 'feedback'; $('feedback').textContent = '';
+  }, 1600);
+}
+
+function traySum(){ return Object.keys(tray).reduce(function(s,d){ return s + d*tray[d]; }, 0); }
+function trayCount(){ return Object.keys(tray).reduce(function(s,d){ return s + tray[d]; }, 0); }
+function renderTray(){
+  const ds = Object.keys(tray).map(Number).filter(function(d){ return tray[d] > 0; }).sort(function(a,b){ return b-a; });
+  $('tray').innerHTML = ds.length ? ds.map(function(d){
+    const st = moneySVG(d);
+    return '<button class="grp" data-v="'+d+'" aria-label="拿回一個 '+d+' 元"><span class="stack">'+st+'</span>'+(tray[d] > 1 ? '<span class="cnt">×'+tray[d]+'</span>' : '')+'</button>';
+  }).join('') : '<span class="empty">'+Z('點下面的錢，放到這個盤子上')+'</span>';
+  Array.from($('tray').querySelectorAll('.grp')).forEach(function(b){ b.onclick = function(){ removeMoney(+b.dataset.v); }; });
+  $('sum').innerHTML = level==='hard' ? Z('盤子上的錢自己數數看') : Z('盤子上有 '+traySum()+' 元');
+}
+function addMoney(v){ if(locked) return; tray[v] = (tray[v]||0) + 1; sCoin(); renderTray(); }
+function removeMoney(v){ if(locked || !tray[v]) return; tray[v]--; if(!tray[v]) delete tray[v]; renderTray(); }
+$('clearBtn').onclick = function(){ if(locked) return; tray = {}; renderTray(); };
+
+/* ===== 提示 ===== */
+function countUp(from, to){
+  /* 往上數：先湊到 5 的倍數，再到 10、50、100……的倍數，一路數到客人給的錢 */
+  const steps = []; let cur = from;
+  [5, 10, 50, 100, 500, 1000].forEach(function(m){
+    const nx = Math.ceil(cur/m)*m;
+    if(nx > cur && nx <= to){ steps.push({ add:nx-cur, to:nx }); cur = nx; }
+  });
+  if(cur < to) steps.push({ add:to-cur, to:to });
+  return '<div class="chain"><b>'+from+'</b>' + steps.map(function(st){ return '<i>＋'+st.add+'→</i><b>'+st.to+'</b>'; }).join('') + '</div>';
+}
+function hintHTML(){
+  const have = traySum(), diff = q.target - have;
+  let t = '';
+  if(level==='easy'){
+    t = diff > 0 ? '盤子上有 '+have+' 元，還差 '+diff+' 元。' : '盤子上有 '+have+' 元，多了 '+(-diff)+' 元，點盤子上的錢可以拿回來。';
+    t += '<br>小秘訣：先拿大的錢，例如先拿 10 元，再拿 5 元，最後用 1 元補齊。';
+    return t;
+  }
+  t += '要找的錢 = 客人給的錢 − 東西的價錢：'+q.pay+' − '+q.total+' = ?<br>';
+  t += '也可以從 '+q.total+' 往上數到 '+q.pay+'，加了多少就找多少：' + countUp(q.total, q.pay);
+  t += '你現在盤子上放了 '+have+' 元。';
+  return t;
+}
+
+/* ===== 作答 ===== */
+$('doneBtn').onclick = function(){
+  if(locked) return;
+  const have = traySum();
+  if(have === q.target){
+    locked = true;
+    results[qi] = (q.retry || q.sumRetry || q.sumMiss) ? 'half' : 'ok';
+    sRegister();
+    $('face').innerHTML = faceSVG(custIdx, true);
+    $('tray').classList.remove('pop'); void $('tray').offsetWidth; $('tray').classList.add('pop');
+    const best = fewest(q.target, LEVELS[level].money), bestN = Object.keys(best).reduce(function(s,d){ return s + best[d]; }, 0);
+    let msg = q.retry ? '你自己找到答案了！' : pick(PRAISE);
+    if(level==='hard' && trayCount() === bestN) msg += '而且用了最少的錢！';
+    $('feedback').className = 'feedback good'; $('feedback').innerHTML = Z(msg);
+    done(); return;
+  }
+  sSoft();
+  $('tray').classList.remove('shake'); void $('tray').offsetWidth; $('tray').classList.add('shake');
+  if(!q.retry){
+    q.retry = true;
+    $('feedback').className = 'feedback warm';
+    $('feedback').innerHTML = Z(pick(COMFORT) + '看看提示，再試一次！');
+    $('hint').innerHTML = Z(hintHTML());
+  }else{
+    locked = true; results[qi] = 'miss';
+    tray = fewest(q.target, LEVELS[level].money); renderTray();
+    $('sum').innerHTML = Z('盤子上有 '+q.target+' 元');
+    $('feedback').className = 'feedback warm';
+    $('feedback').innerHTML = Z('沒關係！可以這樣'+(level==='easy'?'拿':'找'));
+    $('hint').innerHTML = Z((level==='easy' ? '' : q.pay+' − '+q.total+' = '+q.target+'，要找 '+q.target+' 元。<br>')
+      + '用最少的錢：'+describe(tray)+'。');
+    done();
+  }
+};
+function done(){
+  qi++; renderDots();
+  $('doneBtn').disabled = true; $('clearBtn').disabled = true;
+  $('nextBtn').innerHTML = Z(qi >= TOTAL ? '打烊囉，看結果' : '下一位客人');
+  $('nextBtn').hidden = false;
+}
+$('nextBtn').onclick = nextQ;
+$('backBtn').onclick = function(){ clearTimers(); renderHome(); show('home'); };
+$('startBtn').onclick = startGame;
+document.addEventListener('keydown', function(e){
+  if($('game').classList.contains('active') && !$('nextBtn').hidden && (e.key==='Enter' || e.key===' ')){ e.preventDefault(); nextQ(); }
+});
+
+/* ===== 結果 ===== */
+function finish(){
+  const ok = results.filter(function(r){ return r==='ok'; }).length, half = results.filter(function(r){ return r==='half'; }).length;
+  const pts = (ok + half*0.5)/TOTAL, stars = pts>=0.9 ? 3 : pts>=0.7 ? 2 : pts>=0.4 ? 1 : 0;
+  if(!store.best[level] || stars > store.best[level]) store.best[level] = stars;
+  save();
+  $('resultBox').innerHTML = Z('<div class="stars">'+[0,1,2].map(function(i){ return starSVG(i<stars); }).join('')+'</div>'
+    + '<div class="r-face">'+faceSVG(custIdx, true)+'</div>'
+    + '<div class="r-title">'+['明天再來開店吧！','不錯喔！','很厲害的小老闆！','超級小老闆！'][stars]+'</div>'
+    + '<div class="r-line">'+LEVELS[level].name+'　'+TOTAL+' 位客人，做對 '+(ok+half)+' 位'+(half?'（其中 '+half+' 位看了提示）':'')+'</div>'
+    + '<div class="r-btns"><button class="btn blue" id="againBtn">再開一次店</button><button class="btn" id="homeBtn">回首頁</button></div>');
+  $('againBtn').onclick = startGame;
+  $('homeBtn').onclick = function(){ renderHome(); show('home'); };
+  show('result');
+  if(stars >= 2) sRegister();
+}
+
+refreshZy();
+</script>
+</body>
+</html>
