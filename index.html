@@ -67,6 +67,22 @@ body.zy-on .shelf .note{line-height:2.2}
 .lv[aria-pressed="true"]{background:#fff6c9; box-shadow:4px 4px 0 var(--orange); border-color:var(--orange)}
 .start{width:100%; font-size:23px; padding:14px; margin-top:4px}
 .toggles{display:flex; gap:12px; justify-content:center; margin-top:16px; flex-wrap:wrap}
+.bar-l{display:flex; gap:8px; flex-wrap:wrap; align-items:center}
+.result-tg{margin-top:18px}
+/* 意見回饋 */
+.fb-link{display:flex; align-items:center; gap:6px; margin:16px auto 0; background:none; border:none; color:var(--muted); font-weight:800; font-size:15px; padding:4px 8px}
+.fb-link svg{width:24px; height:24px}
+.fb-link:hover{color:var(--blue)}
+.fb-modal{position:fixed; inset:0; background:rgba(29,36,51,.5); display:flex; align-items:center; justify-content:center; padding:16px; z-index:50}
+.fb-box{max-width:440px; width:100%; padding:20px}
+.fb-box h2{margin:0 0 10px; font-size:22px}
+.fb-txt{font-weight:700; line-height:1.7; margin:0 0 8px}
+.fb-txt.warn{color:var(--red)}
+.fb-txt.small{font-size:14px; color:var(--muted)}
+.fb-btns{display:flex; gap:12px; margin-top:14px}
+.fb-btns .btn{flex:1; text-align:center; text-decoration:none; font-size:18px}
+body.zy-on .fb-txt, body.zy-on .fb-box h2{line-height:2.2}
+body.zy-on .fb-btns{flex-direction:column}
 
 /* ---------- 遊戲 ---------- */
 .bar{display:flex; align-items:center; justify-content:space-between; gap:8px 10px; flex-wrap:wrap; margin-bottom:18px}
@@ -170,9 +186,10 @@ body.zy-on .items .tag, body.zy-on .items .nm{white-space:normal}
         <div id="levelOpts"></div>
         <button class="btn blue start" id="startBtn" data-zy="">開店囉！</button>
         <div class="toggles">
-          <button class="btn small" id="soundBtn"></button>
-          <button class="btn small lemon" id="zyBtn"></button>
+          <button class="btn small soundBtn"></button>
+          <button class="btn small lemon zyBtn"></button>
         </div>
+        <button class="fb-link" id="fbBtn" aria-label="意見回饋"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H10l-5 4v-4H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z" fill="#fff" stroke="#1d2433" stroke-width="1.8" stroke-linejoin="round"/><path d="M8 10h8M8 13h5" stroke="#2f5bea" stroke-width="1.8" stroke-linecap="round"/></svg><span data-zy="">意見回饋</span></button>
       </div>
     </div>
   </section>
@@ -180,7 +197,11 @@ body.zy-on .items .tag, body.zy-on .items .nm{white-space:normal}
   <!-- 遊戲 -->
   <section id="game" class="screen">
     <div class="bar">
-      <button class="btn small" id="backBtn" data-zy="">回首頁</button>
+      <div class="bar-l">
+        <button class="btn small" id="backBtn" data-zy="">回首頁</button>
+        <button class="btn small soundBtn"></button>
+        <button class="btn small lemon zyBtn"></button>
+      </div>
       <div class="dots" id="dots"></div>
     </div>
     <div class="play">
@@ -212,7 +233,23 @@ body.zy-on .items .tag, body.zy-on .items .nm{white-space:normal}
   <!-- 結果 -->
   <section id="result" class="screen">
     <div class="box result" id="resultBox"></div>
+    <div class="toggles result-tg">
+      <button class="btn small soundBtn"></button>
+      <button class="btn small lemon zyBtn"></button>
+    </div>
   </section>
+
+  <!-- 意見回饋 -->
+  <div class="fb-modal" id="fbModal" hidden>
+    <div class="box fb-box">
+      <h2 data-zy="">有什麼想法嗎？告訴我們！</h2>
+      <p class="fb-txt" data-zy="">好玩的地方、看不懂的地方、哪裡怪怪的，都可以寫下來。</p>
+      <p class="fb-txt warn" data-zy="">請不要寫下名字、學校、電話這些個人資料喔！</p>
+      <p class="fb-txt small" data-zy="">按下去會打開一個新的網頁表單，需要網路。</p>
+      <div class="fb-btns"><button class="btn" id="fbClose" data-zy="">先不用了</button><a class="btn blue" id="fbGo" target="_blank" rel="noopener noreferrer" data-zy="">好，我要填寫</a></div>
+      <p class="fb-txt small" id="fbNone" hidden data-zy="">（回饋表單還沒設定好）</p>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -336,8 +373,8 @@ function sSoft(){ tone([392, 349], 0.14, 'triangle'); }
 /* =====================================================================
    注音：ZY 由產生器填入（臺灣國語課本讀音），破音字依詞語另外標
    ===================================================================== */
-const ZY = {"一": "ㄧ", "上": "ㄕㄤˋ", "下": "ㄒㄧㄚˋ", "不": "ㄅㄨˋ", "且": "ㄑㄧㄝˇ", "中": "ㄓㄨㄥ", "也": "ㄧㄝˇ", "了": "˙ㄌㄜ", "人": "ㄖㄣˊ", "今": "ㄐㄧㄣ", "以": "ㄧˇ", "位": "ㄨㄟˋ", "你": "ㄋㄧˇ", "來": "ㄌㄞˊ", "例": "ㄌㄧˋ", "便": "ㄅㄧㄢˋ", "係": "ㄒㄧˋ", "個": "ㄍㄜˋ", "做": "ㄗㄨㄛˋ", "價": "ㄐㄧㄚˋ", "元": "ㄩㄢˊ", "先": "ㄒㄧㄢ", "全": "ㄑㄩㄢˊ", "兩": "ㄌㄧㄤˇ", "共": "ㄍㄨㄥˋ", "其": "ㄑㄧˊ", "具": "ㄐㄩˋ", "再": "ㄗㄞˋ", "出": "ㄔㄨ", "刀": "ㄉㄠ", "利": "ㄌㄧˋ", "到": "ㄉㄠˋ", "剛": "ㄍㄤ", "剪": "ㄐㄧㄢˇ", "加": "ㄐㄧㄚ", "厲": "ㄌㄧˋ", "可": "ㄎㄜˇ", "吧": "˙ㄅㄚ", "和": "ㄏㄢˋ", "品": "ㄆㄧㄣˇ", "商": "ㄕㄤ", "喔": "ㄛ", "單": "ㄉㄢ", "嗎": "˙ㄇㄚ", "囉": "˙ㄌㄨㄛ", "回": "ㄏㄨㄟˊ", "困": "ㄎㄨㄣˋ", "在": "ㄗㄞˋ", "多": "ㄉㄨㄛ", "大": "ㄉㄚˋ", "天": "ㄊㄧㄢ", "太": "ㄊㄞˋ", "好": "ㄏㄠˇ", "如": "ㄖㄨˊ", "子": "˙ㄗ", "完": "ㄨㄢˊ", "客": "ㄎㄜˋ", "害": "ㄏㄞˋ", "對": "ㄉㄨㄟˋ", "小": "ㄒㄧㄠˇ", "少": "ㄕㄠˇ", "就": "ㄐㄧㄡˋ", "尺": "ㄔˇ", "差": "ㄔㄚ", "己": "ㄐㄧˇ", "幫": "ㄅㄤ", "幾": "ㄐㄧˇ", "店": "ㄉㄧㄢˋ", "度": "ㄉㄨˋ", "彩": "ㄘㄞˇ", "往": "ㄨㄤˇ", "很": "ㄏㄣˇ", "後": "ㄏㄡˋ", "從": "ㄘㄨㄥˊ", "想": "ㄒㄧㄤˇ", "我": "ㄨㄛˇ", "打": "ㄉㄚˇ", "找": "ㄓㄠˇ", "拿": "ㄋㄚˊ", "提": "ㄊㄧˊ", "擦": "ㄘㄚ", "放": "ㄈㄤˋ", "效": "ㄒㄧㄠˋ", "數": "ㄕㄨˇ", "文": "ㄨㄣˊ", "明": "ㄇㄧㄥˊ", "是": "ㄕˋ", "最": "ㄗㄨㄟˋ", "會": "ㄏㄨㄟˋ", "有": "ㄧㄡˇ", "本": "ㄅㄣˇ", "東": "ㄉㄨㄥ", "果": "ㄍㄨㄛˇ", "案": "ㄢˋ", "棒": "ㄅㄤˋ", "樣": "ㄧㄤˋ", "橡": "ㄒㄧㄤˋ", "次": "ㄘˋ", "正": "ㄓㄥˋ", "水": "ㄕㄨㄟˇ", "沒": "ㄇㄟˊ", "油": "ㄧㄡˊ", "注": "ㄓㄨˋ", "湊": "ㄘㄡˋ", "烊": "ㄧㄤˊ", "現": "ㄒㄧㄢˋ", "用": "ㄩㄥˋ", "當": "ㄉㄤ", "的": "˙ㄉㄜ", "皮": "ㄆㄧˊ", "盒": "ㄏㄜˊ", "盤": "ㄆㄢˊ", "看": "ㄎㄢˋ", "確": "ㄑㄩㄝˋ", "示": "ㄕˋ", "秘": "ㄇㄧˋ", "筆": "ㄅㄧˇ", "答": "ㄉㄚˊ", "算": "ㄙㄨㄢˋ", "箱": "ㄒㄧㄤ", "簡": "ㄐㄧㄢˇ", "紙": "ㄓˇ", "級": "ㄐㄧˊ", "結": "ㄐㄧㄝˊ", "給": "ㄍㄟˇ", "練": "ㄌㄧㄢˋ", "習": "ㄒㄧˊ", "老": "ㄌㄠˇ", "而": "ㄦˊ", "膠": "ㄐㄧㄠ", "自": "ㄗˋ", "色": "ㄙㄜˋ", "蠟": "ㄌㄚˋ", "補": "ㄅㄨˇ", "西": "ㄒㄧ", "要": "ㄧㄠˋ", "記": "ㄐㄧˋ", "訣": "ㄐㄩㄝˊ", "試": "ㄕˋ", "請": "ㄑㄧㄥˇ", "謝": "ㄒㄧㄝˋ", "買": "ㄇㄞˇ", "貼": "ㄊㄧㄝ", "超": "ㄔㄠ", "這": "ㄓㄜˋ", "進": "ㄐㄧㄣˋ", "選": "ㄒㄩㄢˇ", "還": "ㄏㄞˊ", "部": "ㄅㄨˋ", "鉛": "ㄑㄧㄢ", "錢": "ㄑㄧㄢˊ", "錯": "ㄘㄨㄛˋ", "開": "ㄎㄞ", "闆": "ㄅㄢˇ", "關": "ㄍㄨㄢ", "階": "ㄐㄧㄝ", "難": "ㄋㄢˊ", "面": "ㄇㄧㄢˋ", "音": "ㄧㄣ", "頁": "ㄧㄝˋ", "首": "ㄕㄡˇ", "點": "ㄉㄧㄢˇ", "齊": "ㄑㄧˊ", "著": "˙ㄓㄜ", "為": "ㄨㄟˋ", "那": "ㄋㄚˋ", "識": "ㄕˋ", "長": "ㄔㄤˊ", "種": "ㄓㄨㄥˇ", "樂": "ㄌㄜˋ", "得": "ㄉㄜˊ", "累": "ㄌㄟˇ", "綜": "ㄗㄨㄥˋ", "削": "ㄒㄧㄠ", "行": "ㄒㄧㄥˊ", "分": "ㄈㄣ", "剩": "ㄕㄥˋ", "十": "ㄕˊ", "把": "ㄅㄚˇ", "接": "ㄐㄧㄝ", "整": "ㄓㄥˇ", "步": "ㄅㄨˋ", "百": "ㄅㄞˇ", "第": "ㄉㄧˋ", "起": "ㄑㄧˇ", "作": "ㄗㄨㄛˋ", "依": "ㄧ", "倍": "ㄅㄟˋ", "候": "ㄏㄡˋ", "入": "ㄖㄨˋ", "創": "ㄔㄨㄤˋ", "區": "ㄑㄩ", "原": "ㄩㄢˊ", "友": "ㄧㄡˇ", "受": "ㄕㄡˋ", "另": "ㄌㄧㄥˋ", "只": "ㄓˇ", "台": "ㄊㄞˊ", "同": "ㄊㄨㄥˊ", "名": "ㄇㄧㄥˊ", "器": "ㄑㄧˋ", "國": "ㄍㄨㄛˊ", "圖": "ㄊㄨˊ", "型": "ㄒㄧㄥˊ", "填": "ㄊㄧㄢˊ", "外": "ㄨㄞˋ", "字": "ㄗˋ", "定": "ㄉㄧㄥˋ", "宜": "ㄧˊ", "工": "ㄍㄨㄥ", "幣": "ㄅㄧˋ", "張": "ㄓㄤ", "成": "ㄔㄥˊ", "或": "ㄏㄨㄛˋ", "戲": "ㄒㄧˋ", "才": "ㄘㄞˊ", "抽": "ㄔㄡ", "新": "ㄒㄧㄣ", "時": "ㄕˊ", "朋": "ㄆㄥˊ", "服": "ㄈㄨˊ", "枝": "ㄓ", "標": "ㄅㄧㄠ", "機": "ㄐㄧ", "流": "ㄌㄧㄡˊ", "灣": "ㄨㄢ", "瓶": "ㄆㄧㄥˊ", "生": "ㄕㄥ", "產": "ㄔㄢˇ", "由": "ㄧㄡˊ", "目": "ㄇㄨˋ", "真": "ㄓㄣ", "破": "ㄆㄛˋ", "程": "ㄔㄥˊ", "臺": "ㄊㄞˊ", "衣": "ㄧ", "裡": "ㄌㄧˇ", "複": "ㄈㄨˋ", "設": "ㄕㄜˋ", "詞": "ㄘˊ", "語": "ㄩˇ", "課": "ㄎㄜˋ", "讀": "ㄉㄨˊ", "路": "ㄌㄨˋ", "遊": "ㄧㄡˊ", "過": "ㄍㄨㄛˋ", "重": "ㄓㄨㄥˋ", "量": "ㄌㄧㄤˋ", "題": "ㄊㄧˊ", "額": "ㄜˊ", "顏": "ㄧㄢˊ", "髮": "ㄈㄚˋ", "鈔": "ㄔㄠ", "票": "ㄆㄧㄠˋ", "畫": "ㄏㄨㄚˋ", "僅": "ㄐㄧㄣˇ", "供": "ㄍㄨㄥ", "實": "ㄕˊ", "學": "ㄒㄩㄝˊ"};
-const ZY_WORDS = {"關係": ["ㄍㄨㄢ", "˙ㄒㄧ"], "起來": ["ㄑㄧˇ", "˙ㄌㄞ"], "回來": ["ㄏㄨㄟˊ", "˙ㄌㄞ"], "出來": ["ㄔㄨ", "˙ㄌㄞ"], "數數": ["ㄕㄨˇ", "ㄕㄨˇ"], "東西": ["ㄉㄨㄥ", "˙ㄒㄧ"], "客人": ["ㄎㄜˋ", "ㄖㄣˊ"], "便利貼": ["ㄅㄧㄢˋ", "ㄌㄧˋ", "ㄊㄧㄝ"], "謝謝": ["ㄒㄧㄝˋ", "˙ㄒㄧㄝ"], "一枝": ["ㄧˋ", "ㄓ"], "一個": ["ㄧˊ", "˙ㄍㄜ"], "一張": ["ㄧˋ", "ㄓㄤ"], "一把": ["ㄧˋ", "ㄅㄚˇ"], "一瓶": ["ㄧˋ", "ㄆㄧㄥˊ"], "一本": ["ㄧˋ", "ㄅㄣˇ"], "一盒": ["ㄧˋ", "ㄏㄜˊ"], "一共": ["ㄧˊ", "ㄍㄨㄥˋ"]};
+const ZY = {"一": "ㄧ", "上": "ㄕㄤˋ", "下": "ㄒㄧㄚˋ", "不": "ㄅㄨˋ", "且": "ㄑㄧㄝˇ", "中": "ㄓㄨㄥ", "也": "ㄧㄝˇ", "了": "˙ㄌㄜ", "人": "ㄖㄣˊ", "今": "ㄐㄧㄣ", "以": "ㄧˇ", "位": "ㄨㄟˋ", "你": "ㄋㄧˇ", "來": "ㄌㄞˊ", "例": "ㄌㄧˋ", "便": "ㄅㄧㄢˋ", "係": "ㄒㄧˋ", "個": "ㄍㄜˋ", "做": "ㄗㄨㄛˋ", "價": "ㄐㄧㄚˋ", "元": "ㄩㄢˊ", "先": "ㄒㄧㄢ", "全": "ㄑㄩㄢˊ", "兩": "ㄌㄧㄤˇ", "共": "ㄍㄨㄥˋ", "其": "ㄑㄧˊ", "具": "ㄐㄩˋ", "再": "ㄗㄞˋ", "出": "ㄔㄨ", "刀": "ㄉㄠ", "利": "ㄌㄧˋ", "到": "ㄉㄠˋ", "剛": "ㄍㄤ", "剪": "ㄐㄧㄢˇ", "加": "ㄐㄧㄚ", "厲": "ㄌㄧˋ", "可": "ㄎㄜˇ", "吧": "˙ㄅㄚ", "和": "ㄏㄢˋ", "品": "ㄆㄧㄣˇ", "商": "ㄕㄤ", "喔": "ㄛ", "單": "ㄉㄢ", "嗎": "˙ㄇㄚ", "囉": "˙ㄌㄨㄛ", "回": "ㄏㄨㄟˊ", "困": "ㄎㄨㄣˋ", "在": "ㄗㄞˋ", "多": "ㄉㄨㄛ", "大": "ㄉㄚˋ", "天": "ㄊㄧㄢ", "太": "ㄊㄞˋ", "好": "ㄏㄠˇ", "如": "ㄖㄨˊ", "子": "˙ㄗ", "完": "ㄨㄢˊ", "客": "ㄎㄜˋ", "害": "ㄏㄞˋ", "對": "ㄉㄨㄟˋ", "小": "ㄒㄧㄠˇ", "少": "ㄕㄠˇ", "就": "ㄐㄧㄡˋ", "尺": "ㄔˇ", "差": "ㄔㄚ", "己": "ㄐㄧˇ", "幫": "ㄅㄤ", "幾": "ㄐㄧˇ", "店": "ㄉㄧㄢˋ", "度": "ㄉㄨˋ", "彩": "ㄘㄞˇ", "往": "ㄨㄤˇ", "很": "ㄏㄣˇ", "後": "ㄏㄡˋ", "從": "ㄘㄨㄥˊ", "想": "ㄒㄧㄤˇ", "我": "ㄨㄛˇ", "打": "ㄉㄚˇ", "找": "ㄓㄠˇ", "拿": "ㄋㄚˊ", "提": "ㄊㄧˊ", "擦": "ㄘㄚ", "放": "ㄈㄤˋ", "效": "ㄒㄧㄠˋ", "數": "ㄕㄨˇ", "文": "ㄨㄣˊ", "明": "ㄇㄧㄥˊ", "是": "ㄕˋ", "最": "ㄗㄨㄟˋ", "會": "ㄏㄨㄟˋ", "有": "ㄧㄡˇ", "本": "ㄅㄣˇ", "東": "ㄉㄨㄥ", "果": "ㄍㄨㄛˇ", "案": "ㄢˋ", "棒": "ㄅㄤˋ", "樣": "ㄧㄤˋ", "橡": "ㄒㄧㄤˋ", "次": "ㄘˋ", "正": "ㄓㄥˋ", "水": "ㄕㄨㄟˇ", "沒": "ㄇㄟˊ", "油": "ㄧㄡˊ", "注": "ㄓㄨˋ", "湊": "ㄘㄡˋ", "烊": "ㄧㄤˊ", "現": "ㄒㄧㄢˋ", "用": "ㄩㄥˋ", "當": "ㄉㄤ", "的": "˙ㄉㄜ", "皮": "ㄆㄧˊ", "盒": "ㄏㄜˊ", "盤": "ㄆㄢˊ", "看": "ㄎㄢˋ", "確": "ㄑㄩㄝˋ", "示": "ㄕˋ", "秘": "ㄇㄧˋ", "筆": "ㄅㄧˇ", "答": "ㄉㄚˊ", "算": "ㄙㄨㄢˋ", "箱": "ㄒㄧㄤ", "簡": "ㄐㄧㄢˇ", "紙": "ㄓˇ", "級": "ㄐㄧˊ", "結": "ㄐㄧㄝˊ", "給": "ㄍㄟˇ", "練": "ㄌㄧㄢˋ", "習": "ㄒㄧˊ", "老": "ㄌㄠˇ", "而": "ㄦˊ", "膠": "ㄐㄧㄠ", "自": "ㄗˋ", "色": "ㄙㄜˋ", "蠟": "ㄌㄚˋ", "補": "ㄅㄨˇ", "西": "ㄒㄧ", "要": "ㄧㄠˋ", "記": "ㄐㄧˋ", "訣": "ㄐㄩㄝˊ", "試": "ㄕˋ", "請": "ㄑㄧㄥˇ", "謝": "ㄒㄧㄝˋ", "買": "ㄇㄞˇ", "貼": "ㄊㄧㄝ", "超": "ㄔㄠ", "這": "ㄓㄜˋ", "進": "ㄐㄧㄣˋ", "選": "ㄒㄩㄢˇ", "還": "ㄏㄞˊ", "部": "ㄅㄨˋ", "鉛": "ㄑㄧㄢ", "錢": "ㄑㄧㄢˊ", "錯": "ㄘㄨㄛˋ", "開": "ㄎㄞ", "闆": "ㄅㄢˇ", "關": "ㄍㄨㄢ", "階": "ㄐㄧㄝ", "難": "ㄋㄢˊ", "面": "ㄇㄧㄢˋ", "音": "ㄧㄣ", "頁": "ㄧㄝˋ", "首": "ㄕㄡˇ", "點": "ㄉㄧㄢˇ", "齊": "ㄑㄧˊ", "著": "˙ㄓㄜ", "為": "ㄨㄟˋ", "那": "ㄋㄚˋ", "識": "ㄕˋ", "長": "ㄔㄤˊ", "種": "ㄓㄨㄥˇ", "樂": "ㄌㄜˋ", "得": "ㄉㄜˊ", "累": "ㄌㄟˇ", "綜": "ㄗㄨㄥˋ", "削": "ㄒㄧㄠ", "行": "ㄒㄧㄥˊ", "分": "ㄈㄣ", "剩": "ㄕㄥˋ", "十": "ㄕˊ", "把": "ㄅㄚˇ", "接": "ㄐㄧㄝ", "整": "ㄓㄥˇ", "步": "ㄅㄨˋ", "百": "ㄅㄞˇ", "第": "ㄉㄧˋ", "起": "ㄑㄧˇ", "作": "ㄗㄨㄛˋ", "依": "ㄧ", "倍": "ㄅㄟˋ", "候": "ㄏㄡˋ", "入": "ㄖㄨˋ", "創": "ㄔㄨㄤˋ", "區": "ㄑㄩ", "原": "ㄩㄢˊ", "友": "ㄧㄡˇ", "受": "ㄕㄡˋ", "另": "ㄌㄧㄥˋ", "只": "ㄓˇ", "台": "ㄊㄞˊ", "同": "ㄊㄨㄥˊ", "名": "ㄇㄧㄥˊ", "器": "ㄑㄧˋ", "國": "ㄍㄨㄛˊ", "圖": "ㄊㄨˊ", "型": "ㄒㄧㄥˊ", "填": "ㄊㄧㄢˊ", "外": "ㄨㄞˋ", "字": "ㄗˋ", "定": "ㄉㄧㄥˋ", "宜": "ㄧˊ", "工": "ㄍㄨㄥ", "幣": "ㄅㄧˋ", "張": "ㄓㄤ", "成": "ㄔㄥˊ", "或": "ㄏㄨㄛˋ", "戲": "ㄒㄧˋ", "才": "ㄘㄞˊ", "抽": "ㄔㄡ", "新": "ㄒㄧㄣ", "時": "ㄕˊ", "朋": "ㄆㄥˊ", "服": "ㄈㄨˊ", "枝": "ㄓ", "標": "ㄅㄧㄠ", "機": "ㄐㄧ", "流": "ㄌㄧㄡˊ", "灣": "ㄨㄢ", "瓶": "ㄆㄧㄥˊ", "生": "ㄕㄥ", "產": "ㄔㄢˇ", "由": "ㄧㄡˊ", "目": "ㄇㄨˋ", "真": "ㄓㄣ", "破": "ㄆㄛˋ", "程": "ㄔㄥˊ", "臺": "ㄊㄞˊ", "衣": "ㄧ", "裡": "ㄌㄧˇ", "複": "ㄈㄨˋ", "設": "ㄕㄜˋ", "詞": "ㄘˊ", "語": "ㄩˇ", "課": "ㄎㄜˋ", "讀": "ㄉㄨˊ", "路": "ㄌㄨˋ", "遊": "ㄧㄡˊ", "過": "ㄍㄨㄛˋ", "重": "ㄓㄨㄥˋ", "量": "ㄌㄧㄤˋ", "題": "ㄊㄧˊ", "額": "ㄜˊ", "顏": "ㄧㄢˊ", "髮": "ㄈㄚˋ", "鈔": "ㄔㄠ", "票": "ㄆㄧㄠˋ", "畫": "ㄏㄨㄚˋ", "僅": "ㄐㄧㄣˇ", "供": "ㄍㄨㄥ", "實": "ㄕˊ", "學": "ㄒㄩㄝˊ", "些": "ㄒㄧㄝ", "什": "ㄕㄜˊ", "們": "˙ㄇㄣ", "去": "ㄑㄩˋ", "告": "ㄍㄠˋ", "哪": "ㄋㄚˇ", "地": "ㄉㄧˋ", "寫": "ㄒㄧㄝˇ", "怪": "ㄍㄨㄞˋ", "意": "ㄧˋ", "懂": "ㄉㄨㄥˇ", "按": "ㄢˋ", "料": "ㄌㄧㄠˋ", "方": "ㄈㄤ", "校": "ㄒㄧㄠˋ", "法": "ㄈㄚˇ", "玩": "ㄨㄢˊ", "網": "ㄨㄤˇ", "表": "ㄅㄧㄠˇ", "見": "ㄐㄧㄢˋ", "訴": "ㄙㄨˋ", "話": "ㄏㄨㄚˋ", "資": "ㄗ", "都": "ㄉㄡ", "電": "ㄉㄧㄢˋ", "需": "ㄒㄩ", "饋": "ㄎㄨㄟˋ", "麼": "˙ㄇㄜ"};
+const ZY_WORDS = {"關係": ["ㄍㄨㄢ", "˙ㄒㄧ"], "起來": ["ㄑㄧˇ", "˙ㄌㄞ"], "回來": ["ㄏㄨㄟˊ", "˙ㄌㄞ"], "出來": ["ㄔㄨ", "˙ㄌㄞ"], "數數": ["ㄕㄨˇ", "ㄕㄨˇ"], "東西": ["ㄉㄨㄥ", "˙ㄒㄧ"], "客人": ["ㄎㄜˋ", "ㄖㄣˊ"], "便利貼": ["ㄅㄧㄢˋ", "ㄌㄧˋ", "ㄊㄧㄝ"], "謝謝": ["ㄒㄧㄝˋ", "˙ㄒㄧㄝ"], "一枝": ["ㄧˋ", "ㄓ"], "一個": ["ㄧˊ", "˙ㄍㄜ"], "一張": ["ㄧˋ", "ㄓㄤ"], "一把": ["ㄧˋ", "ㄅㄚˇ"], "一瓶": ["ㄧˋ", "ㄆㄧㄥˊ"], "一本": ["ㄧˋ", "ㄅㄣˇ"], "一盒": ["ㄧˋ", "ㄏㄜˊ"], "一共": ["ㄧˊ", "ㄍㄨㄥˋ"], "什麼": ["ㄕㄜˊ", "˙ㄇㄜ"], "我們": ["ㄨㄛˇ", "˙ㄇㄣ"], "下來": ["ㄒㄧㄚˋ", "˙ㄌㄞ"], "名字": ["ㄇㄧㄥˊ", "˙ㄗ"], "哪裡": ["ㄋㄚˇ", "˙ㄌㄧ"]};
 function rubyOf(c, z){
   let light = false, tn = '';
   if(z.charAt(0)==='˙'){ light = true; z = z.slice(1); }
@@ -384,12 +421,59 @@ function renderHome(){
   }).join('');
   document.querySelectorAll('.lv .ic svg').forEach(function(s){ s.style.width = '100%'; s.style.height = '100%'; });
   document.querySelectorAll('[data-level]').forEach(function(b){ b.onclick = function(){ store.level = b.dataset.level; save(); renderHome(); }; });
-  $('soundBtn').innerHTML = Z('音效：' + (soundOn ? '開' : '關'));
-  $('zyBtn').innerHTML = 'ㄅ ' + Z('注音：' + (store.zhuyin ? '開' : '關'));
+  renderToggles();
 }
-$('soundBtn').onclick = function(){ soundOn = !soundOn; renderHome(); };
-$('zyBtn').onclick = function(){ store.zhuyin = !store.zhuyin; save(); refreshZy(); };
+/* 音效、注音開關：首頁、遊戲中、結果頁都有，隨時可以切換 */
+function renderToggles(){
+  document.querySelectorAll('.soundBtn').forEach(function(b){ b.innerHTML = Z('音效：' + (soundOn ? '開' : '關')); });
+  document.querySelectorAll('.zyBtn').forEach(function(b){ b.innerHTML = 'ㄅ ' + Z('注音：' + (store.zhuyin ? '開' : '關')); });
+}
+document.querySelectorAll('.soundBtn').forEach(function(b){ b.onclick = function(){ soundOn = !soundOn; renderToggles(); b.blur(); }; });
+document.querySelectorAll('.zyBtn').forEach(function(b){ b.onclick = function(){
+  store.zhuyin = !store.zhuyin; save(); refreshZy();
+  /* 遊戲進行中切換：把畫面上已經出現的文字加上或拿掉注音，題目不會重來 */
+  ['game','result'].forEach(function(id){ if($(id).classList.contains('active')) convertZy($(id), store.zhuyin); });
+  b.blur();
+}; });
 function refreshZy(){ document.body.classList.toggle('zy-on', !!store.zhuyin); applyStaticZy(); renderHome(); }
+
+/* 把一塊畫面裡的文字加上注音（on）或拿掉注音（off）；SVG 裡的字不動 */
+function escTxt(t){ return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function convertZy(root, on){
+  if(!on){
+    root.querySelectorAll('.zc').forEach(function(el){ el.replaceWith(document.createTextNode(el.firstChild ? el.firstChild.textContent : '')); });
+    root.normalize();
+    return;
+  }
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+    acceptNode: function(n){
+      if(!/[一-鿿]/.test(n.nodeValue)) return NodeFilter.FILTER_REJECT;
+      if(n.parentNode.closest('.zc, svg, script, style')) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;
+    }
+  });
+  const nodes = [];
+  while(walker.nextNode()) nodes.push(walker.currentNode);
+  nodes.forEach(function(n){
+    const tmp = document.createElement('span');
+    tmp.innerHTML = zy(escTxt(n.nodeValue));
+    const frag = document.createDocumentFragment();
+    while(tmp.firstChild) frag.appendChild(tmp.firstChild);
+    n.replaceWith(frag);
+  });
+}
+
+/* ===== 意見回饋 ===== */
+const FEEDBACK_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSdI7dj-2c6DyenytiPzBN5ztsY4_0m4JI-Z8LYKYW4JOYqleQ/viewform';
+$('fbBtn').onclick = function(){
+  const ok = /^https:\/\//.test(FEEDBACK_URL);
+  $('fbGo').hidden = !ok; $('fbNone').hidden = ok;
+  if(ok) $('fbGo').href = FEEDBACK_URL;
+  $('fbModal').hidden = false;
+};
+$('fbClose').onclick = function(){ $('fbModal').hidden = true; };
+$('fbGo').addEventListener('click', function(){ setTimeout(function(){ $('fbModal').hidden = true; }, 300); });
+$('fbModal').addEventListener('click', function(e){ if(e.target === $('fbModal')) $('fbModal').hidden = true; });
 
 /* =====================================================================
    出題
